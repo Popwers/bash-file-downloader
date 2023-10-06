@@ -55,7 +55,7 @@ show_progress() {
 
 # Function to display usage instructions
 usage() {
-  echo "Usage: $0 -i <SSH_KEY> -u <REMOTE_USER> -s <REMOTE_SERVER> -d <LOCAL_DIRECTORY>"
+  echo "Usage: $0 -i <SSH_KEY> -u <REMOTE_USER> -s <REMOTE_SERVER> -d <LOCAL_DIRECTORY> -f <FILE_PATTERN>"
   exit 1
 }
 
@@ -69,9 +69,10 @@ SSH_KEY=""
 REMOTE_USER=""
 REMOTE_SERVER=""
 LOCAL_DIRECTORY=""
+FILE_PATTERN=""
 
 # Parse command line arguments
-while getopts "i:u:s:d:" opt; do
+while getopts "i:u:s:d:f:" opt; do
   case $opt in
     i)
       SSH_KEY="$OPTARG"
@@ -85,6 +86,9 @@ while getopts "i:u:s:d:" opt; do
     d)
       LOCAL_DIRECTORY="$OPTARG"
       ;;
+    f)
+      FILE_PATTERN="$OPTARG"
+      ;;
     *)
       usage
       ;;
@@ -96,33 +100,33 @@ if [ -z "$SSH_KEY" ] || [ -z "$REMOTE_USER" ] || [ -z "$REMOTE_SERVER" ] || [ -z
   usage
 fi
 
-echo "Searching for .env* files on $REMOTE_SERVER..."
+show_progress "info" "Searching for $FILE_PATTERN files on $REMOTE_SERVER..."
 
 # Check if rsync is available on the remote server
 RSYNC_AVAILABLE=$(is_rsync_available)
 
 # Execute the remote find command and capture the results
-REMOTE_COMMAND="sudo find ~/ -type f -name '.env*' -exec echo {} \;"
+REMOTE_COMMAND="sudo find ~/ -type f -name '$FILE_PATTERN' -exec echo {} \;"
 SSH_OUTPUT=$(ssh -i "$SSH_KEY" "$REMOTE_USER@$REMOTE_SERVER" "$REMOTE_COMMAND")
 
 # Check if any files were found
 if [ -z "$SSH_OUTPUT" ]; then
-  echo "No .env* files were found on $REMOTE_SERVER."
+  show_progress "info" "No $FILE_PATTERN files were found on $REMOTE_SERVER."
 else
   # Display the found files
-  echo -e "Found .env* files on $REMOTE_SERVER :\n\n$SSH_OUTPUT"
+  show_progress "info" "Found $FILE_PATTERN files on $REMOTE_SERVER :\n\n$SSH_OUTPUT"
 
   # Copy files using rsync if available, otherwise use scp
   if [ "$RSYNC_AVAILABLE" == "true" ]; then
-    echo -e "\n\nCopying files using rsync..."
+    show_progress "info" "Copying files using rsync..."
     rsync -avz -e "ssh -i $SSH_KEY" --progress --files-from=<(echo "$SSH_OUTPUT") "$REMOTE_USER@$REMOTE_SERVER:/" "$LOCAL_DIRECTORY"
   else
-    echo -e "\n\nCopying files using scp..."
+    show_progress "info" "Copying files using scp..."
     while IFS= read -r file; do
-      echo "Copying $file to $LOCAL_DIRECTORY..."
+      show_progress "info" "Copying $file to $LOCAL_DIRECTORY..."
       scp -i "$SSH_KEY" "$REMOTE_USER@$REMOTE_SERVER:$file" "$LOCAL_DIRECTORY"
     done <<< "$SSH_OUTPUT"
   fi
 
-  echo -e "\n\nCopy completed. Files are copied to $LOCAL_DIRECTORY."
+  show_progress "success" "Copy completed. Files are copied to $LOCAL_DIRECTORY."
 fi
