@@ -150,5 +150,5 @@ else
   fi
 
   show_progress "" "" "\n"
-  show_progress "success" "\n\nCopy completed. Files are copied to $LOCAL_DIRECTORY."
+  show_progress "success" "Copy completed. Files are copied to $LOCAL_DIRECTORY."
 fi
