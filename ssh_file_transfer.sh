@@ -124,7 +124,7 @@ SSH_OUTPUT=$(ssh -i "$SSH_KEY" "$REMOTE_USER@$REMOTE_SERVER" "$REMOTE_COMMAND")
 
 # Check if any files were found
 if [ -z "$SSH_OUTPUT" ]; then
-  show_progress "info" "No $FILE_PATTERN files were found on $REMOTE_SERVER."
+  show_progress "warning" "No $FILE_PATTERN files were found on $REMOTE_SERVER."
 else
   # Check if the LOCAL_DIRECTORY exists or create it
   create_local_directory "$LOCAL_DIRECTORY"
