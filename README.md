@@ -35,6 +35,7 @@ Before using this script, ensure you have the following prerequisites installed 
 2. Make the script executable:
 
    ```shell
+    cd ssh-file-transfer
     chmod +x ssh_file_transfer.sh
     ```
 
